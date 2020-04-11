@@ -29,7 +29,9 @@ const messageController = (io) => {
         );
       }
 
-      const message = await Message.findById(req.params.messageId);
+      const message = await Message.findById(req.params.messageId).populate({
+        path: "attachment",
+      });
 
       if (!message) {
         return next(
@@ -89,6 +91,52 @@ const messageController = (io) => {
   // @access    Private
   controllerMethods.updateMessage = async (req, res, next) => {
     try {
+      const messageId = req.params.messageId || null;
+
+      // Validate messageId
+      if (!messageId) {
+        return next(
+          new ErrorResponse(`Please enter valid message id ${messageId}`, 400)
+        );
+      }
+
+      // Validate body
+      if (!req.body) {
+        return next(new ErrorResponse("Please provide valid details", 400));
+      }
+
+      const { receiverId, status } = req.body;
+
+      req.body.senderId = req.user.id;
+
+      const message = await Message.findByIdAndUpdate(messageId, req.body, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!message) {
+        return next(
+          new ErrorResponse(
+            `Can't update message with the id of ${messageId}`,
+            404
+          )
+        );
+      }
+
+      if (receiverId && receiverId.length > 0 && status !== "draft") {
+        const userList = await User.find({ _id: { $in: receiverId } });
+        userList.map((obj) => {
+          io.to(`${obj.socketId}`).emit("inbox", {
+            name: req.user.name,
+            subject: req.body.subject,
+          });
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: message,
+      });
     } catch (e) {
       return next(e);
     }
@@ -99,25 +147,21 @@ const messageController = (io) => {
   // @access    Private
   controllerMethods.deleteMessage = async (req, res, next) => {
     try {
-      if (!req.params.messageId) {
+      const messageId = req.params.messageId || null;
+
+      if (!messageId) {
         return next(
-          new ErrorResponse(
-            `Please enter valid message id ${req.params.messageId}`,
-            400
-          )
+          new ErrorResponse(`Please enter valid message id ${messageId}`, 400)
         );
       }
 
-      const message = await Message.findByIdAndUpdate(req.params.messageId, {
-        delete: true,
+      const message = await Message.findByIdAndUpdate(messageId, {
+        $addToSet: { deleteId: req.user._id },
       });
 
       if (!message) {
         return next(
-          new ErrorResponse(
-            `No message with the id of ${req.params.messageId}`,
-            404
-          )
+          new ErrorResponse(`No message with the id of ${messageId}`, 404)
         );
       }
 

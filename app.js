@@ -1,7 +1,7 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const path = require("path");
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const logger = require("morgan");
 const mongoSanitize = require("express-mongo-sanitize");
@@ -63,7 +63,7 @@ newConn.on("error", console.error.bind(console, "MongoDB Connection Error"));
 const port = normalizePort(process.env.PORT || "5000");
 app.set("port", port);
 
-app.use(cookieParser()); // Cookie parser
+// app.use(cookieParser()); // Cookie parser
 app.use(express.json()); // Body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public"))); // Set static folder

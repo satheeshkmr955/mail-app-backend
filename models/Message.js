@@ -25,11 +25,7 @@ const MessageSchema = new mongoose.Schema(
       uppercase: true,
     },
     attachment: [{ type: mongoose.Schema.ObjectId, ref: "Upload" }],
-    delete: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
+    deleteId: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
   },
   {
     timestamps: true,
@@ -45,5 +41,7 @@ const MessageSchema = new mongoose.Schema(
 // Indexing the fields to queries faster
 MessageSchema.index({ senderId: 1 });
 MessageSchema.index({ receiverId: 1 });
+MessageSchema.index({ deleteId: 1 });
+MessageSchema.index({ attachment: 1 });
 
 module.exports = mongoose.model("Message", MessageSchema);

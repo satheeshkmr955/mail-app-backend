@@ -13,6 +13,7 @@ const messageRouter = (io) => {
     getMessage,
     createMessage,
     deleteMessage,
+    updateMessage,
   } = messageController(io);
 
   router.use(protect);
@@ -26,7 +27,11 @@ const messageRouter = (io) => {
     )
     .post(createMessage);
 
-  router.route("/:messageId").get(getMessage).delete(deleteMessage);
+  router
+    .route("/:messageId")
+    .get(getMessage)
+    .delete(deleteMessage)
+    .patch(updateMessage);
   return router;
 };
 

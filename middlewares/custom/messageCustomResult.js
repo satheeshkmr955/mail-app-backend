@@ -1,9 +1,7 @@
 const messageCustomResult = async (req, res, next) => {
   switch (req.query.mailType) {
     case "inbox":
-      req.query.receiverId = {
-        $elemMatch: { $eq: req.user.id },
-      };
+      req.query.receiverId = { in: [req.user.id] };
       req.query.populate = { path: "senderId", select: "name email" };
       break;
     case "sent":
@@ -19,7 +17,7 @@ const messageCustomResult = async (req, res, next) => {
       req.query.senderId = req.user.id;
       req.query.populate = { path: "receiverId", select: "name email" };
   }
-  req.query.delete = false;
+  req.query.deleteId = { nin: [req.user.id] };
 
   delete req.query["mailType"];
   next();
